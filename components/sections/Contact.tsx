@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
-import { useRef } from "react";
-import { Download, Github, Linkedin, Instagram, Award } from "lucide-react";
+import { useRef, useState } from "react";
+import { Download, Github, Linkedin, Instagram, Award, Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const socialLinks = [
@@ -16,8 +16,12 @@ const socialLinks = [
         name: "LinkedIn",
         href: "https://www.linkedin.com/in/jerin-rex-b02535249/",
         icon: Linkedin,
-    }
-    
+    },
+    {
+        name: "Instagram",
+        href: "https://www.instagram.com/jerin_rex",
+        icon: Instagram,
+    },
 ];
 
 const certifications = [
@@ -51,6 +55,47 @@ export function Contact() {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+    const [form, setForm] = useState({ name: "", email: "", message: "" });
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+    const [errorMsg, setErrorMsg] = useState("");
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+
+        if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+            setStatus("error");
+            setErrorMsg("Please fill in all fields.");
+            return;
+        }
+
+        setStatus("loading");
+        setErrorMsg("");
+
+        try {
+            const res = await fetch("/api/contact", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            });
+
+            if (res.ok) {
+                setStatus("success");
+                setForm({ name: "", email: "", message: "" });
+            } else {
+                const data = await res.json();
+                setStatus("error");
+                setErrorMsg(data.error || "Something went wrong. Please try again.");
+            }
+        } catch {
+            setStatus("error");
+            setErrorMsg("Network error. Please try again.");
+        }
+    };
+
     return (
         <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 bg-accent/20">
             <div className="container mx-auto max-w-4xl">
@@ -60,25 +105,120 @@ export function Contact() {
                     animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-12 text-center">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-center">
                         Get In Touch
                     </h2>
+                    <p className="text-center text-muted-foreground mb-12 text-lg">
+                        Have a project in mind or want to collaborate? Drop me a message!
+                    </p>
+
+                    {/* Contact Form */}
+                    <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 mb-10 shadow-lg shadow-primary/5">
+                        <div className="space-y-5">
+                            {/* Name & Email Row */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-foreground" htmlFor="name">
+                                        Your Name
+                                    </label>
+                                    <input
+                                        suppressHydrationWarning
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        placeholder="John Doe"
+                                        value={form.name}
+                                        onChange={handleChange}
+                                        disabled={status === "loading"}
+                                        className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50 text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-foreground" htmlFor="email">
+                                        Your Email
+                                    </label>
+                                    <input
+                                        suppressHydrationWarning
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        placeholder="john@example.com"
+                                        value={form.email}
+                                        onChange={handleChange}
+                                        disabled={status === "loading"}
+                                        className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50 text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Message */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-foreground" htmlFor="message">
+                                    Message
+                                </label>
+                                <textarea
+                                    suppressHydrationWarning
+                                    id="message"
+                                    name="message"
+                                    rows={5}
+                                    placeholder="Hi Jerin, I'd love to work with you on..."
+                                    value={form.message}
+                                    onChange={handleChange}
+                                    disabled={status === "loading"}
+                                    className="w-full px-4 py-3 rounded-lg bg-background border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all disabled:opacity-50 text-sm resize-none"
+                                />
+                            </div>
+
+                            {/* Status Messages */}
+                            {status === "success" && (
+                                <div className="flex items-center gap-2 text-green-400 bg-green-400/10 border border-green-400/20 rounded-lg px-4 py-3 text-sm">
+                                    <CheckCircle className="h-4 w-4 shrink-0" />
+                                    Message sent successfully! I'll get back to you soon.
+                                </div>
+                            )}
+                            {status === "error" && (
+                                <div className="flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-4 py-3 text-sm">
+                                    <AlertCircle className="h-4 w-4 shrink-0" />
+                                    {errorMsg}
+                                </div>
+                            )}
+
+                            {/* Submit Button */}
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={status === "loading" || status === "success"}
+                                size="lg"
+                                className="w-full min-h-[48px] text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg shadow-blue-600/20"
+                            >
+                                {status === "loading" ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        Sending...
+                                    </>
+                                ) : status === "success" ? (
+                                    <>
+                                        <CheckCircle className="mr-2 h-5 w-5" />
+                                        Message Sent!
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="mr-2 h-5 w-5" />
+                                        Send Message
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
 
                     {/* Contact Info */}
                     <div className="text-center mb-8">
                         <p className="text-lg text-muted-foreground mb-2">
-                            <a
-                                href="tel:+918925212131"
-                                className="hover:text-primary transition-colors min-h-[44px] inline-flex items-center"
-                            >
+                            <a href="tel:+918925212131" className="hover:text-primary transition-colors min-h-[44px] inline-flex items-center">
                                 +91 8925212131
                             </a>
                         </p>
                         <p className="text-lg text-muted-foreground mb-2">
-                            <a
-                                href="mailto:jerinrx@gmail.com"
-                                className="hover:text-primary transition-colors min-h-[44px] inline-flex items-center"
-                            >
+                            <a href="mailto:jerinrx@gmail.com" className="hover:text-primary transition-colors min-h-[44px] inline-flex items-center">
                                 jerinrx@gmail.com
                             </a>
                         </p>
@@ -131,7 +271,7 @@ export function Contact() {
                             variant="outline"
                             className="min-h-[44px] px-8 text-base font-semibold"
                         >
-                            <a href="/resume/Jerin_Rex_G_Resume.pdf" download="JerinRexG_Resume.pdf">
+                            <a href="/resume/JerinRexG.pdf" download="JerinRexG_Resume.pdf">
                                 <Download className="mr-2 h-5 w-5" />
                                 Download Resume
                             </a>

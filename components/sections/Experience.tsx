@@ -105,13 +105,13 @@ function Lightbox({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
         >
-            {/* ── Top bar: counter + close ── */}
+            {/* Top bar */}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
                 <div className="px-3 py-1 rounded-full bg-white/10 text-white text-sm font-medium">
                     {current + 1} / {images.length}
                 </div>
-                {/* BIG close button — always visible on mobile */}
                 <button
+                    suppressHydrationWarning
                     onClick={onClose}
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 hover:bg-white/25 text-white text-sm font-medium transition-all active:scale-95"
                 >
@@ -120,17 +120,16 @@ function Lightbox({
                 </button>
             </div>
 
-            {/* ── Image area ── */}
+            {/* Image area */}
             <div className="flex-1 flex items-center justify-center px-2 min-h-0">
-                {/* Prev arrow */}
                 <button
+                    suppressHydrationWarning
                     onClick={prev}
                     className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center transition-all active:scale-95 mr-2"
                 >
                     <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </button>
 
-                {/* Image */}
                 <motion.div
                     key={current}
                     className="relative flex-1 h-full max-h-[75vh] rounded-xl overflow-hidden"
@@ -147,8 +146,8 @@ function Lightbox({
                     />
                 </motion.div>
 
-                {/* Next arrow */}
                 <button
+                    suppressHydrationWarning
                     onClick={next}
                     className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center transition-all active:scale-95 ml-2"
                 >
@@ -156,10 +155,11 @@ function Lightbox({
                 </button>
             </div>
 
-            {/* ── Dot indicators ── */}
+            {/* Dot indicators */}
             <div className="flex justify-center gap-2 py-4 flex-shrink-0">
                 {images.map((_, i) => (
                     <button
+                        suppressHydrationWarning
                         key={i}
                         onClick={() => setCurrent(i)}
                         className="w-2.5 h-2.5 rounded-full transition-all duration-200"
@@ -180,13 +180,18 @@ function Lightbox({
 function ScreenshotDropdown({ images, color }: { images: string[]; color: string }) {
     const [open, setOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => { setMounted(true); }, []);
 
     if (!images || images.length === 0) return null;
+    if (!mounted) return null;
 
     return (
         <div className="mt-4">
             {/* Toggle button */}
             <button
+                suppressHydrationWarning
                 onClick={() => setOpen((o) => !o)}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 style={{
@@ -264,7 +269,6 @@ function ScreenshotDropdown({ images, color }: { images: string[]; color: string
     );
 }
 
-
 // ── Main Experience ───────────────────────────────────────────────────────────
 export function Experience() {
     const ref = useRef(null);
@@ -307,19 +311,19 @@ export function Experience() {
                                             <Briefcase className="h-5 w-5" style={{ color: exp.color }} />
                                         </div>
                                         {exp.website ? (
-    <a
-        href={exp.website}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-2xl font-bold text-foreground hover:underline hover:text-primary transition-colors"
-    >
-        {exp.company}
-    </a>
-) : (
-    <h3 className="text-2xl font-bold text-foreground">
-        {exp.company}
-    </h3>
-)}
+                                            <a
+                                                href={exp.website}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-2xl font-bold text-foreground hover:underline hover:text-primary transition-colors"
+                                            >
+                                                {exp.company}
+                                            </a>
+                                        ) : (
+                                            <h3 className="text-2xl font-bold text-foreground">
+                                                {exp.company}
+                                            </h3>
+                                        )}
                                         <span
                                             className="px-3 py-1 text-xs font-medium rounded-full"
                                             style={{
